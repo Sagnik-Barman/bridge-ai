@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/*
+!data/.gitkeep
+saves/*
+!saves/.gitkeep
+rl/checkpoints/*
+!rl/checkpoints/.gitkeep
+*.npz
+*.pt
+*.pbn
+*.dat
+.DS_Store

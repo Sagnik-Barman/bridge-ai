@@ -1,0 +1,101 @@
+# Standard American 2/1 Game Force — structured rule specification
+#
+# Drafted from first principles / general public bidding-system knowledge
+# (the kind summarized in WBF system descriptions and ACBL convention
+# cards), NOT transcribed from any book. This is intentionally a starting
+# skeleton covering opening bids only; responses, rebids, competitive
+# bidding, and slam conventions (Blackwood/Gerber/RKC) are left as
+# `# TODO` for later passes.
+#
+# Schema:
+#   opening_bids: list of {bid, conditions: {hcp_min, hcp_max, shape, ...}, name}
+#     Conditions are evaluated in order; first match wins.
+#   Each hand feature referenced here (hcp, suit lengths, balanced shape,
+#   etc.) is computed by engine/deal.py's Hand class — the engine reads
+#   this file purely as data and does not embed convention-specific
+#   knowledge itself.
+
+system_name: "Standard American 2/1 Game Force"
+
+opening_bids:
+  - bid: "1NT"
+    name: "Standard 1NT opening"
+    conditions:
+      hcp_min: 15
+      hcp_max: 17
+      balanced: true
+
+  - bid: "2NT"
+    name: "Standard 2NT opening"
+    conditions:
+      hcp_min: 20
+      hcp_max: 21
+      balanced: true
+
+  - bid: "2C"
+    name: "Strong artificial opening (2/1 GF systems typically use this as strong/artificial)"
+    conditions:
+      hcp_min: 22
+      # TODO: also trigger on standalone game-forcing hands below 22 HCP
+      # (e.g. long solid suit with few losers) — needs a "playing tricks"
+      # or "losing trick count" feature added to Hand.
+
+  - bid: "1S"
+    name: "One spade opening"
+    conditions:
+      hcp_min: 13
+      hcp_max: 21
+      suit: "S"
+      suit_min_length: 5
+      longest_or_tied_longest: true
+
+  - bid: "1H"
+    name: "One heart opening"
+    conditions:
+      hcp_min: 13
+      hcp_max: 21
+      suit: "H"
+      suit_min_length: 5
+      longest_or_tied_longest: true
+
+  - bid: "1D"
+    name: "One diamond opening"
+    conditions:
+      hcp_min: 13
+      hcp_max: 21
+      suit: "D"
+      suit_min_length: 3
+      # 1D/1C choice with 3-3 minors: prefer the one below (1D) unless
+      # 4-4 in the minors, standard Standard American convenience rule.
+      preference_over: "1C"
+
+  - bid: "1C"
+    name: "One club opening (default minor)"
+    conditions:
+      hcp_min: 13
+      hcp_max: 21
+      suit: "C"
+      suit_min_length: 3
+
+  - bid: "3-level preempt"
+    name: "Preemptive opening (weak, long suit)"
+    dynamic: "preempt_longest_suit_at_3_level"
+    conditions:
+      hcp_min: 5
+      hcp_max: 10
+      suit_min_length: 7
+      # TODO: encode suit quality requirement (e.g. two of top three honors)
+
+  - bid: "Pass"
+    name: "Opening pass"
+    conditions:
+      hcp_max: 12
+
+responses: {}   # TODO: 2/1 responses, 1NT forcing, Jacoby 2NT, etc.
+rebids: {}      # TODO: opener rebids after each response
+competitive: {} # TODO: overcalls, takeout doubles, negative doubles
+conventions:
+  # TODO: Stayman, Jacoby transfers, Blackwood/RKC 1430, Gerber
+  stayman: null
+  jacoby_transfers: null
+  blackwood: null

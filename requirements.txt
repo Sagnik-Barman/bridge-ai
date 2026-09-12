@@ -1,0 +1,10 @@
+# Core
+endplay>=0.5.0        # Wraps the DDS (Double Dummy Solver) C library; also provides PBN utilities
+PyYAML>=6.0           # Bidding convention rules as structured data
+Flask>=3.0            # Local web app (webapp/app.py) for the full game/tutor UI
+numpy>=1.24           # Feature encoding + the reference NumPy network (rl/features.py, rl/network_numpy.py)
+torch>=2.1            # The RL card-play agent's network + self-play training (rl/network.py) — CUDA-capable;
+                      # see docs/rl_training.md for the right install command for your GPU/CUDA version
+
+# Dev / testing
+pytest>=7.0

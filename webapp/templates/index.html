@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bridge Trainer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header id="top-bar">
+    <div id="board-info">
+      <span id="board-number">Board 1</span>
+      <span id="dealer-vul"></span>
+      <span id="your-seat"></span>
+    </div>
+    <div id="score-info">
+      <span id="play-mode-label" title=""></span>
+      <span id="total-imps"></span>
+      <span id="boards-played"></span>
+      <button id="new-game-btn">New game</button>
+      <button id="saved-games-btn">Saved games</button>
+    </div>
+  </header>
+
+  <div id="new-game-modal" hidden>
+    <div id="new-game-card">
+      <h3>Start a new game</h3>
+      <p class="modal-hint">Starts fresh from board 1. Your current game is autosaved first, so you can always come back to it under "Saved games".</p>
+      <label for="play-mode-select">Opponent</label>
+      <select id="play-mode-select">
+        <option value="heuristic">Standard bot (fast, club-level heuristics)</option>
+        <option value="dds">Play against DDS (double-dummy / PIMC leads)</option>
+        <option value="rl">Play against RL (self-play-trained network)</option>
+      </select>
+      <div id="play-mode-hint" class="modal-hint"></div>
+      <div id="new-game-actions">
+        <button id="start-new-game-btn">Start</button>
+        <button id="cancel-new-game-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="saved-games-modal" hidden>
+    <div id="saved-games-card">
+      <h3>Saved games</h3>
+      <div id="save-as-row">
+        <input type="text" id="save-name-input" placeholder="Name this game...">
+        <button id="save-as-btn">Save current game</button>
+      </div>
+      <div id="saved-games-list"></div>
+      <button id="close-saved-games-btn">Close</button>
+    </div>
+  </div>
+
+  <main>
+    <section id="table-area">
+      <div id="seat-N" class="seat-hand"><h3>North</h3><div class="cards"></div></div>
+      <div id="seat-W" class="seat-hand"><h3>West</h3><div class="cards"></div></div>
+      <div id="trick-area"><div id="trick-cards"></div></div>
+      <div id="seat-E" class="seat-hand"><h3>East</h3><div class="cards"></div></div>
+      <div id="seat-S" class="seat-hand"><h3>South</h3><div class="cards"></div></div>
+    </section>
+
+    <section id="side-panel">
+      <div id="auction-panel">
+        <h3>Auction</h3>
+        <table id="auction-table">
+          <thead><tr><th>N</th><th>E</th><th>S</th><th>W</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div id="suggestion-panel" hidden>
+        <h3>Suggested call</h3>
+        <div id="suggestion-call"></div>
+        <div id="suggestion-explanation"></div>
+      </div>
+
+      <div id="feedback-panel" hidden></div>
+
+      <div id="bidding-box" hidden>
+        <div class="bid-row" id="bid-row-1"></div>
+        <div class="bid-row" id="bid-row-2"></div>
+        <div class="bid-row" id="bid-row-3"></div>
+        <div class="bid-row" id="bid-row-4"></div>
+        <div class="bid-row" id="bid-row-5"></div>
+        <div class="bid-row" id="bid-row-6"></div>
+        <div class="bid-row" id="bid-row-7"></div>
+        <div class="bid-row" id="bid-row-special">
+          <button data-call="Pass">Pass</button>
+          <button data-call="Dbl">Dbl</button>
+          <button data-call="Rdbl">Rdbl</button>
+        </div>
+      </div>
+
+      <div id="contract-panel" hidden>
+        <h3>Contract</h3>
+        <div id="contract-text"></div>
+        <div id="tricks-text"></div>
+      </div>
+
+      <div id="controls">
+        <button id="undo-call-btn" hidden>Undo call</button>
+        <button id="undo-card-btn" hidden>Undo card</button>
+        <button id="analyze-btn" hidden>Analyze</button>
+        <button id="restart-board-btn">Restart board</button>
+        <button id="next-board-btn" hidden>Next board &rarr;</button>
+      </div>
+
+      <div id="analysis-panel" hidden>
+        <h3>Analysis <span id="analysis-seat"></span></h3>
+        <div id="analysis-consensus"></div>
+        <table id="analysis-table">
+          <thead><tr><th>Source</th><th>Suggests</th><th>Notes</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div id="board-result-panel" hidden>
+        <h3>Board result</h3>
+        <div id="board-result-text"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
