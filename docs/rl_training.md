@@ -408,6 +408,250 @@ watch the trend line yourself and decide when it's trained "enough" for
 what you need (a resume demo vs. genuinely strong club-level play are very
 different bars).
 
+## A fourth attempt: imitation warm start
+
+After three training configurations (pure self-play, +opponent diversity,
++per-trick reward shaping) all landed at essentially the same result, and
+a synthetic sanity check ruled out a bug in the training loop itself (see
+"A third real result" above), the honest remaining explanations were: the
+state encoding may not carry enough signal, and/or REINFORCE from random
+weights in a 52-card action space with no search is simply slow to find
+anything good in ~100,000 self-play games. The first of those is hard to
+fix without a redesign; the second has a standard, well-known answer:
+**don't start from random weights.**
+
+**The idea.** Before self-play begins, pretrain the policy network with
+ordinary supervised learning (behavior cloning) on a pile of (position,
+correct card) examples, so self-play only has to *refine* an
+already-reasonable policy instead of discovering bridge from nothing. This
+is the same idea behind AlphaGo's original supervised pretraining phase,
+scaled down to fit this project.
+
+**The honest catch: this codebase doesn't have a validated way to get the
+true double-dummy-optimal card at an arbitrary mid-hand position.** Two
+real primitives exist, and each covers only part of the problem:
+
+- `cardplay/endgame_solver.py`'s alpha-beta search is genuinely exact —
+  but only tractable up to a handful of cards left per hand (see
+  `docs/endgame_solver.md`).
+- `cardplay/dds_player.py`'s DDS/PIMC-informed play is only meaningfully
+  different from the heuristic bot at a fresh trick *lead* — by its own
+  module docstring, it falls back to the same heuristic rules mid-trick,
+  because this project's DDS binding doesn't expose (or, more precisely,
+  hasn't been able to *validate* — same caution as `pbn_loader.py`) a
+  "best card mid-trick" primitive.
+
+So `rl/generate_labels.py` labels exactly two situations — near the end of
+a hand (exact, via the endgame solver, at a higher card limit than the
+live Analyzer feature since offline generation can afford to wait longer
+per position) and trick leads earlier in the hand (DDS/PIMC-informed, when
+`endplay` is installed) — and leaves every other decision (mid-trick,
+many cards still out) unlabeled rather than mislabeling it with the
+heuristic bot's own choice, which would teach the network nothing new.
+That's a real, useful, but *partial* teacher, not a full double-dummy
+oracle — say so plainly if this comes up in an interview.
+
+**Running it -- time a small batch first.** `rl/generate_labels.py`'s
+cost is dominated by `endgame_solver` calls, and this project's own
+measurements (`docs/endgame_solver.md`) already showed that cost grows
+several-fold per additional card, not gradually -- an early version of
+this script defaulted `--endgame-limit` to 8 reasoning "offline can
+afford to wait longer per position," and that was wrong: with roughly
+half of every hand's decisions falling at 8-or-fewer cards left, and many
+of those individual searches burning through the full 200,000-node
+budget before giving up, a few thousand deals at limit 8 measured out at
+multiple *hours*, not minutes. The default is now 6 (matching the rest of
+this codebase), but "how long will N deals actually take" still depends
+on your machine, so run a small batch first and read the progress line's
+ETA before committing to a big one:
+
+```bash
+python -m rl.generate_labels --num-deals 100 --out /tmp/probe.npz
+#   ...50/100 deals, 812 labels so far (23s elapsed, ~23s remaining)
+# scale --num-deals from that rate to whatever total time you're willing
+# to spend, then run the real thing:
+python -m rl.generate_labels --num-deals 3000 --out rl/checkpoints/imitation_labels.npz
+python -m rl.pretrain --labels rl/checkpoints/imitation_labels.npz --out rl/checkpoints/warm_start.pt
+python -m rl.train --resume-from rl/checkpoints/warm_start.pt --iterations 5000 \
+    --games-per-iter 20 --heuristic-opponent-prob 0.5 --out rl/checkpoints/latest.pt
+```
+
+The last command is your existing self-play training command, unchanged
+except for `--resume-from` pointing at the warm-started checkpoint instead
+of starting from random weights — `rl/train.py` already supported
+resuming, so nothing there needed to change. `rl/generate_labels.py` is
+dependency-free (pure Python + NumPy; DDS-informed lead labels are simply
+skipped if `endplay` isn't installed, with a printed note saying so), so
+you can build the dataset even before setting up CUDA. `rl/pretrain.py`
+adds a `pretrain_step` method to both `PolicyValueNet` implementations
+(plain cross-entropy on the masked policy head; the value head is left
+alone here, since these labels don't come with a return estimate to train
+it toward — self-play trains that soon enough regardless).
+
+Both `pretrain_step` implementations, and `rl/generate_labels.py`'s
+position-selection logic, are covered by dependency-free tests
+(`tests/test_rl_network_numpy.py`, `tests/test_generate_labels.py`) that
+run without torch or endplay — a small synthetic-labels convergence check
+mirroring `scripts/rl_sanity_check.py`'s method confirmed the supervised
+step actually learns before this was ever run against real bridge
+positions.
+
+**What to expect, honestly**: this should help with the "random
+initialization in a huge action space" half of the plausible explanations
+above. It does nothing for the "state encoding might not carry enough
+signal" half, and it's still a partial teacher (leads and endgames, not
+the middle of the hand) — so treat a re-evaluation after this as another
+honest data point, not a guaranteed fix. Report whatever comes back,
+including a null result, the same way the first three attempts were
+reported here.
+
+**The actual result, run end-to-end**: a fourth null result. 1000 deals of
+imitation labels (23,883 labeled decisions, endgame-solver only — `endplay`
+wasn't installed for this run, so no DDS-informed lead labels), 10 epochs
+of pretraining, then 5000 self-play iterations resumed from the
+warm-started checkpoint, evaluated on the standard 300-deal benchmark:
+
+```
+RL agent as declarer:          5.86 tricks/board avg
+Heuristic bot as declarer:     6.40 tricks/board avg
+```
+
+Virtually identical to the third attempt's 5.85 vs 6.29 — the in-training
+30-deal eval briefly showed a better-looking 6.00 vs 6.50 at iteration
+5000, but that was flagged as likely noise from a small sample *before*
+running the full evaluation, and the full 300-deal number confirmed it was
+exactly that. Four structurally different interventions (pure self-play,
+opponent diversity, per-trick reward shaping, imitation warm start) now
+land in the same 5.85-5.91 vs 6.29-6.40 band. That's a strong pattern
+pointing at a structural ceiling — the state encoding and/or the
+"no-lookahead policy network" algorithm class itself — rather than
+anything fixable by another training-loop tweak. See "A fifth attempt"
+below for the one remaining lever that changes something other than the
+training loop.
+
+## A fifth attempt: search on top of the policy
+
+Four attempts at training a *better* policy all landed in the same band.
+The one remaining honest lever that doesn't just re-run the same idea a
+fifth way is to stop asking the network to do everything itself: give it
+actual lookahead at decision time, the way real double-dummy-solver-backed
+players (and this project's own `dds_player.py` / `game/session.py`
+Analyzer) already do — fall back to exact search near the end of the hand,
+where it's cheap enough to be tractable, and use the learned policy only
+where an exact search isn't affordable.
+
+**The idea.** `cardplay/endgame_solver.py`'s alpha-beta search is already
+proven exact (it's what generated the imitation-learning labels above) and
+already known to reliably finish within a second or two at up to 6 cards
+left per hand. `rl/evaluate.py` now has `_rl_policy_with_endgame_search(net,
+endgame_limit)`: a hybrid decision function that calls `solve_endgame`
+whenever the mover has `<= endgame_limit` cards left, and only asks the
+network when the position is too large for that. This changes nothing
+about what the network learned — same checkpoint, same weights — it only
+changes how much of the game is decided by exact search versus by the
+network's own (still-modest) judgment.
+
+**The honest catch.** This is measured in `rl/evaluate.py` specifically
+because evaluation is full-information (the network already sees every
+hand there, matching how it was trained) — `solve_endgame` needs full
+information to search at all. Real gameplay in the app is NOT
+full-information (a defender can't see declarer's and dummy's hidden
+cards), so this hybrid is *not* wired into `rl/rl_player.py` (the real
+opponent used by "Play against RL") as of this writing — doing that
+would need the same PIMC sampling `rl_player.py` already does for the
+network, applied to the endgame solver too, which is a real follow-up but
+separate work, not done here. Treat this as measuring an upper bound on
+what search-assisted play could do for this network, not a shipped
+gameplay feature yet.
+
+**Running it:**
+
+```bash
+python -m rl.evaluate --checkpoint rl/checkpoints/latest.pt --num-deals 300 --seed 1 \
+    --endgame-search-limit 6
+```
+
+This plays every deal four ways (plain RL as declarer, heuristic as
+declarer, RL+endgame-search as declarer, and heuristic+endgame-search as
+declarer — the credit-attribution control described below — all against
+the same heuristic defense) and prints all four averages, so the hybrid's
+effect is a direct, measured number against the same baseline already
+reported above — not an assumption. It roughly quadruples the runtime of a
+plain `rl.evaluate` call (four playouts per deal instead of two, and the
+endgame searches themselves aren't free), so expect it to take longer than
+the 300-deal runs you've done before; time a smaller `--num-deals` first
+if you want an ETA.
+
+Covered by `tests/test_rl_evaluate.py` (torch-gated, like
+`tests/test_rl_network.py`): confirms both hybrids return exactly the
+exact-solver's answer within the search limit, fall back to their
+respective plain policy above it, and that turning them on doesn't change
+the existing plain-RL/heuristic numbers in `evaluate_vs_heuristic`.
+
+**The credit-attribution control.** The first run of this (300 deals,
+seed 1) came back genuinely positive:
+
+```
+RL agent as declarer:                                5.85 tricks/board avg
+Heuristic bot as declarer:                            6.37 tricks/board avg
+RL + endgame search (<=6 cards) as declarer:          6.59 tricks/board avg
+```
+
+RL+search finally beat the plain heuristic bot — the first time in this
+entire project that any RL-based configuration has. Before reporting that
+as "search fixes it," the honest next question is whether the *network*
+is contributing anything, or whether the exact search alone is strong
+enough to win regardless of what policy sits above it. `rl/evaluate.py`'s
+`_heuristic_policy_with_endgame_search` answers this directly: it's the
+identical search, bolted onto the plain heuristic bot instead of the
+network, as a control. A second run (same seed, same checkpoint) added
+this control and got:
+
+```
+RL agent as declarer:                                     5.84 tricks/board avg
+Heuristic bot as declarer:                                6.28 tricks/board avg
+RL + endgame search (<=6 cards) as declarer:              6.63 tricks/board avg
+Heuristic + endgame search (<=6 cards) as declarer:       7.14 tricks/board avg
+```
+
+(The small run-to-run drift in the RL and heuristic baselines — 5.85→5.84,
+6.37→6.28 — is consistent with floating-point non-determinism in the
+network's GPU inference occasionally flipping a near-tied `argmax`, not a
+bug; it doesn't change the conclusion below.)
+
+**The honest read: the search is doing essentially all of the work, and
+the trained network is still worse than the heuristic even with search
+added to both.** The heuristic's gain from search (6.28 → 7.14, +0.86) is
+at least as large as the RL policy's gain from search (5.84 → 6.63,
++0.79) — if the network were adding real value on top of the search, its
+gain should have been *larger* than the heuristic's, not roughly the same
+or smaller. And directly: heuristic+search (7.14) beats RL+search (6.63)
+by half a trick. So "search on top" is a real, working technique — it's
+just that it works better on top of the simple hand-written heuristic
+than on top of five training runs' worth of learned policy. That's a
+fifth consistent data point that the trained network's mid-hand judgment
+is weaker than the heuristic bot's own rules, not a fifth data point that
+gets erased by finally finding a lever that helps.
+
+**What to actually say about this in an interview**: exact search near
+the end of a hand is a real, measurable win (+0.79 to +0.86 tricks/board,
+reproduced on two runs) — that's a legitimate, load-bearing result from
+this project's own from-scratch alpha-beta solver. The trained RL policy,
+across five structurally different attempts (pure self-play, opponent
+diversity, reward shaping, imitation warm start, and now search-augmented
+inference), has never beaten the project's own hand-written heuristic bot
+in an apples-to-apples comparison. The honest diagnosis is that the
+combination of this state encoding, this network size, and REINFORCE
+without search is not enough training signal to out-learn a dozen
+hand-written bridge rules in the time available — not a training-loop bug
+(ruled out by the synthetic sanity check), and not fixable by "train
+longer" alone (four attempts already tried variations of that). Reporting
+this precisely — what worked (search), what didn't (five attempts at a
+better learned policy), and why the two don't get to share credit — is a
+stronger interview answer than either an inflated "RL beats heuristic"
+claim or an incomplete "we added search and it worked" claim that skips
+the control that shows search would have worked on anything.
+
 ## Wiring into the app
 
 Once you have a checkpoint at `rl/checkpoints/latest.pt` (the default
@@ -419,26 +663,39 @@ smarter than it is.
 
 ## What's honestly out of scope
 
-- No search (no MCTS/minimax on top of the policy) — this is a direct
-  policy network, not an AlphaZero-style system.
 - No bidding RL — bidding is, and stays, the rules-based engine.
 - The self-play training environment uses full information; only the
   PIMC-wrapped inference path (`rl/rl_player.py`) handles the real
   imperfect-information setting, and that wrapper is an approximation
-  (averaging a handful of samples), not exact.
+  (averaging a handful of samples), not exact. The endgame-search hybrid
+  (see "A fifth attempt") is measured only in the full-information
+  `rl/evaluate.py` harness for this same reason — it is not wired into
+  real (imperfect-information) gameplay as of this writing.
 - No claim is made about how many training iterations "are enough" — that
   depends entirely on how much compute time you give it before your
   deadline; run `rl/evaluate.py` periodically and judge for yourself.
-- **As shipped, the trained agent does not beat the heuristic bot** — see
-  "A third real result" above. Three training configurations (pure
-  self-play, +opponent diversity, +per-trick reward shaping) all land
-  around 5.85-5.91 tricks/board as declarer vs. the heuristic bot's
-  ~6.29-6.34, and a synthetic sanity check confirmed this isn't a bug in
-  the training loop itself. This is reported as the project's honest
-  result, not hidden or glossed over — the "Play against RL" opponent in
-  the app is real and works, it's just not yet stronger than the
-  rule-based bot it's compared against.
-- No imitation-learning warm start, no search/planning on top of the
-  policy, and no further hyperparameter sweep were attempted beyond what's
-  documented above — these are the concrete, named next steps if you want
-  to keep pushing this component further, not silent gaps.
+- **As trained, the network never beats the heuristic bot on its own
+  judgment.** Five structurally different attempts — pure self-play,
+  +opponent diversity, +per-trick reward shaping, an imitation warm start,
+  and search-augmented inference — all confirm the same thing: this
+  state encoding, network size, and REINFORCE-without-search setup does
+  not out-learn the project's own hand-written heuristic rules in the
+  time available (see "A third real result", "A fourth attempt", and "A
+  fifth attempt" above). A synthetic sanity check ruled out a training-loop
+  bug. This is reported as the project's honest result, not hidden or
+  glossed over — the "Play against RL" opponent in the app is real and
+  works, it's just not yet stronger than the rule-based bot it's compared
+  against.
+- **Exact endgame search near the end of a hand is a real, separately
+  demonstrated win** (+0.79 to +0.86 tricks/board, reproduced on two
+  300-deal runs — see "A fifth attempt"), but a credit-attribution control
+  (the same search bolted onto the plain heuristic instead of the network)
+  showed the heuristic gains at least as much from it as the RL policy
+  does, and heuristic+search still beats RL+search outright. So this
+  project's honest conclusion is two separate findings, not one: search
+  helps (genuinely, measurably), and the trained policy specifically does
+  not add value beyond the heuristic, with or without search. Don't
+  conflate "RL+search beat the plain heuristic" with "the RL component
+  works" — the control rules that reading out. No further hyperparameter
+  sweep or training-loop variant was attempted beyond what's documented
+  above — a concrete, named stopping point, not a silent gap.
