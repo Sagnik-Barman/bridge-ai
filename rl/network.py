@@ -138,6 +138,33 @@ class PolicyValueNet:
 
         return {"policy_loss": float(policy_loss.item()), "value_loss": float(value_loss.item())}
 
+    # -- training: supervised imitation warm start (behavior cloning) ------
+
+    def pretrain_step(self, batch, lr: float = 1e-3) -> dict:
+        """One supervised step toward a set of *labeled* (x, mask,
+        action_index) triples -- no returns, unlike `train_step`. Mirrors
+        `rl/network_numpy.py`'s `pretrain_step` exactly (plain
+        cross-entropy on the masked policy head, value head untouched).
+        Used only by rl/pretrain.py for the imitation warm start."""
+        for group in self.optimizer.param_groups:
+            group["lr"] = lr
+
+        xs = torch.as_tensor(np.stack([b[0] for b in batch]), dtype=torch.float32, device=self.device)
+        masks = torch.as_tensor(np.stack([b[1] for b in batch]), dtype=torch.float32, device=self.device)
+        actions = torch.as_tensor([b[2] for b in batch], dtype=torch.long, device=self.device)
+
+        logits, _ = self.net(xs)
+        masked_logits = logits.masked_fill(masks == 0, -1e9)
+        log_probs = F.log_softmax(masked_logits, dim=-1)
+        chosen_log_probs = log_probs.gather(1, actions.unsqueeze(1)).squeeze(1)
+        loss = -chosen_log_probs.mean()
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return {"loss": float(loss.item())}
+
     # -- persistence ---------------------------------------------------------
 
     def save(self, path: str) -> None:

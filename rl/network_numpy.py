@@ -124,6 +124,43 @@ class PolicyValueNet:
 
         return {"policy_loss": policy_loss_total / max(n, 1), "value_loss": value_loss_total / max(n, 1)}
 
+    # -- training: supervised imitation warm start (behavior cloning) ------
+
+    def pretrain_step(self, batch, lr: float = 1e-3) -> dict:
+        """One supervised step toward a set of *labeled* (x, mask,
+        action_index) triples -- no returns involved, unlike `train_step`.
+        Used only for the imitation warm start (see rl/generate_labels.py
+        and rl/pretrain.py): fit the policy head to imitate a stronger
+        source (the endgame solver, or DDS at trick leads) with ordinary
+        cross-entropy, before self-play RL takes over. The value head is
+        left untouched here (`dvalue=0.0`) -- these labels don't come with
+        a return estimate the value head should be trained toward, and
+        self-play will train it soon enough regardless."""
+        grads = {k: np.zeros_like(v) for k, v in self.params.items()}
+        loss_total = 0.0
+
+        for x, mask, action in batch:
+            logits, value, cache = self.forward(x)
+            probs = _masked_softmax(logits, mask)
+
+            # Plain cross-entropy gradient: (probs - one_hot(action)),
+            # i.e. train_step's REINFORCE gradient with advantage fixed
+            # at 1 instead of (return - value) -- there's no return here,
+            # just "this was the correct card."
+            dlogits = probs.copy()
+            dlogits[action] -= 1.0
+            dlogits *= mask
+
+            self._backward(cache, dlogits, 0.0, grads)
+            loss_total += -float(np.log(max(probs[action], 1e-8)))
+
+        n = len(batch)
+        for k in grads:
+            grads[k] /= max(n, 1)
+        self._adam_update(grads, lr)
+
+        return {"loss": loss_total / max(n, 1)}
+
     def _backward(self, cache, dlogits, dvalue, grads) -> None:
         p = self.params
         x, z1, h1, z2, h2 = cache["x"], cache["z1"], cache["h1"], cache["z2"], cache["h2"]
