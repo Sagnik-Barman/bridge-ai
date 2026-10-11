@@ -47,8 +47,35 @@ def endplay_available() -> bool:
         return False
 
 
+_DDS_READY = False
+
+
+def _init_dds_once() -> None:
+    """Give DDS one thread and a fixed memory budget in this process.
+
+    endplay initialises DDS with automatic resources: memory for every CPU thread
+    and a budget based on the machine's free RAM. That is fine for one process, but
+    rl/datagen.py runs one process per worker, and with 12 workers on a 20-thread
+    laptop each one sized DDS for the whole machine. They then competed for memory
+    and generation ran about 10x slower than expected. Each worker only ever calls
+    solve_board from one thread, so one thread is all it needs.
+    Override the budget with BRIDGE_DDS_MEMORY_MB (default 400)."""
+    global _DDS_READY
+    if _DDS_READY:
+        return
+    import os
+    try:
+        from endplay._dds import _dll
+        _dll.SetResources(int(os.environ.get("BRIDGE_DDS_MEMORY_MB", "400")), 1)
+    except Exception:
+        pass  # older/newer endplay without this symbol: keep its defaults
+    _DDS_READY = True
+
+
 def _values_dds(ps: PlayState) -> Dict[Card, int]:
     from endplay.dds import solve_board
+
+    _init_dds_once()
     from endplay.types import Deal as EDeal, Denom, Player
 
     # endplay wants the hands as they were at the start of the current trick,
