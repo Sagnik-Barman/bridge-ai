@@ -261,9 +261,9 @@ class GameSession:
         if not os.path.exists(self.rl_checkpoint_path):
             return None
         try:
-            from rl.network import PolicyValueNet
+            from rl.rl_player import load_any
 
-            self._rl_net = PolicyValueNet.load(self.rl_checkpoint_path)
+            self._rl_net = load_any(self.rl_checkpoint_path)
         except Exception:
             # Covers both "torch isn't installed" (ImportError) and any
             # checkpoint-loading problem — either way, fall back to the
@@ -393,7 +393,12 @@ class GameSession:
                 result["rl"] = {
                     "available": True,
                     "suggested_card": str(rl_card),
-                    "note": "Self-play-trained network, PIMC-wrapped (20 samples) — see rl/rl_player.py.",
+                    "note": (
+                        "v2 network trained on double-dummy-labelled positions; sees only what this "
+                        "player can see — see docs/rl_training.md."
+                        if getattr(net, "obs", None) == "visible"
+                        else "Self-play-trained network, PIMC-wrapped (20 samples) — see rl/rl_player.py."
+                    ),
                 }
             except Exception as exc:
                 result["rl"] = {"available": False, "suggested_card": None, "note": f"RL analysis failed: {exc}"}

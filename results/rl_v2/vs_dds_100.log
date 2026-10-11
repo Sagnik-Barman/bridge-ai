@@ -1,0 +1,13 @@
+    [declare heuristic] 50/100  avg tricks 6.38
+    [declare heuristic] 100/100  avg tricks 6.45
+  declare heuristic              tricks  6.45 (±0.19)  vs DD +0.56  opt  85.6%  thrown/board 3.61  (6s)
+    [declare v2 visible (honest)] 50/100  avg tricks 7.80
+    [declare v2 visible (honest)] 100/100  avg tricks 7.70
+  declare v2 visible (honest)    tricks  7.70 (±0.21)  vs DD +1.81  opt  94.2%  thrown/board 1.42  (8s)
+    [declare DDS PIMC (honest)] 50/100  avg tricks 6.76
+    [declare DDS PIMC (honest)] 100/100  avg tricks 6.79
+  declare DDS PIMC (honest)      tricks  6.79 (±0.20)  vs DD +0.90  opt  88.4%  thrown/board 3.02  (57s)
+
+Double-dummy tricks for these contracts: 5.89
+  declare: v2 visible (honest) - heuristic = +1.25 tricks/board (paired s.e. 0.18)
+  declare: DDS PIMC (honest) - heuristic = +0.34 tricks/board (paired s.e. 0.14)

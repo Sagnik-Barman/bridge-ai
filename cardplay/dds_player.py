@@ -81,14 +81,31 @@ def _known_hands_for(seat: str, play_state: PlayState) -> Dict[str, List[Card]]:
     return known
 
 
+def played_cards(play_state: PlayState) -> set:
+    """Every card already out of the hands: completed tricks plus the
+    current trick. Public information -- everyone at the table saw them."""
+    out = {c for t in play_state.completed_tricks for _, c in t.plays}
+    out.update(c for _, c in play_state.current_trick.plays)
+    return out
+
+
 def _sample_unseen_hands(
-    known: Dict[str, List[Card]], unseen_sizes: Dict[str, int], rng: random.Random
+    known: Dict[str, List[Card]], unseen_sizes: Dict[str, int], rng: random.Random,
+    played: Optional[set] = None,
 ) -> Dict[str, List[Card]]:
     """Deal the cards nobody's revealed yet to the unseen seats, respecting
-    each seat's known remaining hand size (equal at a trick boundary,
-    which is the only time this is called — so this is an exact, not
-    merely plausible, completion of the deal)."""
+    each seat's known remaining hand size.
+
+    `played` must hold every card already played (see `played_cards`). An
+    earlier version left it out, so from trick 2 on the pool included cards
+    that had already been played: about 8 of 18 sampled cards in a measured
+    mid-hand example, i.e. PIMC was solving impossible deals. Nothing raised
+    an error, so both this module's DDS leads and rl/rl_player.py's sampling
+    were quietly reasoning about the wrong worlds. Fixed October 2026;
+    regression test in tests/test_dds_player.py."""
     seen = {c for cards in known.values() for c in cards}
+    if played:
+        seen |= set(played)
     pool = [Card(s, r) for s in Suit for r in RANKS if Card(s, r) not in seen]
     rng.shuffle(pool)
 
@@ -152,7 +169,7 @@ def _score_lead_candidate(
     total = 0.0
     valid_samples = 0
     for _ in range(num_samples):
-        sampled = _sample_unseen_hands(known, unseen_sizes, rng)
+        sampled = _sample_unseen_hands(known, unseen_sizes, rng, played_cards(play_state))
         sim = _play_out_one_trick(seat, card, sampled, play_state, rng)
         winner = sim.completed_tricks[-1].winner(sim.trump)
         won_this_trick = 1 if winner in our_side else 0

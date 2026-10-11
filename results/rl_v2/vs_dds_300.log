@@ -1,0 +1,48 @@
+    [declare heuristic] 50/300  avg tricks 6.38
+    [declare heuristic] 100/300  avg tricks 6.45
+    [declare heuristic] 150/300  avg tricks 6.41
+    [declare heuristic] 200/300  avg tricks 6.44
+    [declare heuristic] 250/300  avg tricks 6.37
+    [declare heuristic] 300/300  avg tricks 6.41
+  declare heuristic              tricks  6.41 (±0.11)  vs DD +0.45  opt  85.6%  thrown/board 3.81  (18s)
+    [declare v2 visible (honest)] 50/300  avg tricks 7.80
+    [declare v2 visible (honest)] 100/300  avg tricks 7.70
+    [declare v2 visible (honest)] 150/300  avg tricks 7.63
+    [declare v2 visible (honest)] 200/300  avg tricks 7.69
+    [declare v2 visible (honest)] 250/300  avg tricks 7.60
+    [declare v2 visible (honest)] 300/300  avg tricks 7.58
+  declare v2 visible (honest)    tricks  7.58 (±0.12)  vs DD +1.62  opt  93.5%  thrown/board 1.65  (183s)
+    [declare DDS PIMC (honest)] 50/300  avg tricks 6.76
+    [declare DDS PIMC (honest)] 100/300  avg tricks 6.79
+    [declare DDS PIMC (honest)] 150/300  avg tricks 6.80
+    [declare DDS PIMC (honest)] 200/300  avg tricks 6.83
+    [declare DDS PIMC (honest)] 250/300  avg tricks 6.68
+    [declare DDS PIMC (honest)] 300/300  avg tricks 6.72
+  declare DDS PIMC (honest)      tricks  6.72 (±0.12)  vs DD +0.76  opt  88.3%  thrown/board 3.10  (180s)
+    [defend heuristic] 50/300  avg tricks 6.38
+    [defend heuristic] 100/300  avg tricks 6.45
+    [defend heuristic] 150/300  avg tricks 6.41
+    [defend heuristic] 200/300  avg tricks 6.44
+    [defend heuristic] 250/300  avg tricks 6.37
+    [defend heuristic] 300/300  avg tricks 6.41
+  defend  heuristic              tricks  6.41 (±0.11)  vs DD +0.45  opt  83.8%  thrown/board 4.26  (32s)
+    [defend v2 visible (honest)] 50/300  avg tricks 5.20
+    [defend v2 visible (honest)] 100/300  avg tricks 5.30
+    [defend v2 visible (honest)] 150/300  avg tricks 5.17
+    [defend v2 visible (honest)] 200/300  avg tricks 5.10
+    [defend v2 visible (honest)] 250/300  avg tricks 5.07
+    [defend v2 visible (honest)] 300/300  avg tricks 5.13
+  defend  v2 visible (honest)    tricks  5.13 (±0.12)  vs DD -0.83  opt  91.5%  thrown/board 2.22  (36s)
+    [defend DDS PIMC (honest)] 50/300  avg tricks 5.58
+    [defend DDS PIMC (honest)] 100/300  avg tricks 5.68
+    [defend DDS PIMC (honest)] 150/300  avg tricks 5.85
+    [defend DDS PIMC (honest)] 200/300  avg tricks 5.90
+    [defend DDS PIMC (honest)] 250/300  avg tricks 5.82
+    [defend DDS PIMC (honest)] 300/300  avg tricks 5.83
+  defend  DDS PIMC (honest)      tricks  5.83 (±0.12)  vs DD -0.13  opt  85.5%  thrown/board 4.04  (549s)
+
+Double-dummy tricks for these contracts: 5.96
+  declare: v2 visible (honest) - heuristic = +1.17 tricks/board (paired s.e. 0.10)
+  declare: DDS PIMC (honest) - heuristic = +0.31 tricks/board (paired s.e. 0.09)
+  defend: v2 visible (honest) - heuristic = -1.28 tricks/board (paired s.e. 0.10)
+  defend: DDS PIMC (honest) - heuristic = -0.58 tricks/board (paired s.e. 0.10)

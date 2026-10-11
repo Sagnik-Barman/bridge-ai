@@ -118,7 +118,16 @@ def test_matches_real_dds_on_small_endgames():
     isn't installed — see the module docstring for why this pairing
     matters: this solver exists partly to be checked against DDS, not
     just to exist standalone."""
-    from engine.dds_wrapper import DDSUnavailableError, solve_double_dummy
+    # DDS's full-table call (engine/dds_wrapper.solve_double_dummy) only accepts
+    # complete 13-card deals -- on a 5-card position it returns meaningless numbers
+    # (an earlier version of this test used it, and compared the wrong seat's entry).
+    # For a part-played position, DDS's SolveBoard is the right call: it scores every
+    # card the player on lead can play.
+    try:
+        from endplay.dds import solve_board
+        from endplay.types import Deal as EndplayDeal, Denom, Player
+    except ImportError:
+        return  # nothing to cross-check in this environment
     from engine.deal import Deal, Hand
 
     matched_any = False
@@ -143,19 +152,14 @@ def test_matches_real_dds_on_small_endgames():
         except Exception:
             continue
 
-        remaining_deal = Deal(hands={s: Hand(cards=ps.hands[s]) for s in SEATS}, dealer=ps.next_to_play)
-        try:
-            table = solve_double_dummy(remaining_deal)
-        except DDSUnavailableError:
-            return  # nothing to cross-check in this environment
-
         mover = ps.next_to_play
+        remaining = Deal(hands={s: Hand(cards=ps.hands[s]) for s in SEATS}, dealer=mover)
+        ep = EndplayDeal(remaining.pbn())
+        ep.trump = Denom.nt
+        ep.first = {"N": Player.north, "E": Player.east, "S": Player.south, "W": Player.west}[mover]
+        mover_side_tricks = max(tricks for _, tricks in solve_board(ep))
         remaining_total = len(ps.hands[mover])
-        mover_side_tricks = table[mover]["NT"]
-        if mover in ("N", "S"):
-            dds_ns_tricks = mover_side_tricks
-        else:
-            dds_ns_tricks = remaining_total - mover_side_tricks
+        dds_ns_tricks = mover_side_tricks if mover in ("N", "S") else remaining_total - mover_side_tricks
 
         assert our_result.ns_tricks_from_here == dds_ns_tricks, (
             f"seed={seed}: our solver says {our_result.ns_tricks_from_here} NS tricks "

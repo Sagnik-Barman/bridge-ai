@@ -1,0 +1,9 @@
+technique,solved,cases,mean_nodes,median_nodes,mean_ms,x_fewer_nodes
+plain minimax + alpha-beta,0,12,30000000,30000000,643.33,1.0
++ yes/no (null-window) search,0,12,30000000,30000000,715.22,1.0
++ move ordering,0,12,30000000,30000000,1151.78,1.0
++ equivalent cards,0,12,30000000,30000000,1201.94,1.0
+"+ transposition table, exact ranks",1,12,28005921,30000000,3815.26,1.1
++ relative-rank keys,10,12,18636278,20152380,2558.77,1.6
++ partition search,12,12,4095684,1961754,889.57,7.3
++ quick-trick / top-trump bounds (all),12,12,3843603,1680632,947.06,7.8

@@ -10,6 +10,14 @@ rl/checkpoints/*
 !rl/checkpoints/.gitkeep
 *.npz
 *.pt
+# The deployed app's Easy (RL) opponent loads this file directly -- it
+# must be tracked, unlike the training artifacts around it (datasets,
+# warm-start/intermediate checkpoints), which stay ignored above. Every
+# time you retrain and want the deployed site to update, overwrite this
+# same file and commit it -- Render auto-redeploys on push. This negation
+# must come after the `*.pt` line above, not before -- git applies
+# .gitignore patterns in order, and a later rule overrides an earlier one.
+!rl/checkpoints/latest.pt
 *.pbn
 *.dat
 .DS_Store

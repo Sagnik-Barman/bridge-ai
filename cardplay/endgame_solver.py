@@ -68,9 +68,31 @@ def _state_key(ps: PlayState) -> tuple:
     return (hands_key, trick_key, ps.next_to_play)
 
 
-def _value(ps: PlayState, alpha: float, beta: float, memo: Dict[tuple, int], nodes: list, budget: int) -> int:
-    if ps.is_complete():
-        return ps.tricks_by_side()["NS"]
+def _ns_gain(ps: PlayState, tricks_before: int) -> int:
+    """1 if the card just played completed a trick that N-S won, else 0."""
+    if len(ps.completed_tricks) > tricks_before:
+        return 1 if ps.completed_tricks[-1].winner(ps.trump) in NS else 0
+    return 0
+
+
+def _value(ps: PlayState, alpha: float, beta: float, memo: Dict[tuple, Tuple[float, float]], nodes: list, budget: int) -> int:
+    """N-S tricks from this position on (not counting tricks already completed).
+
+    Values are relative to the position, so the memo key (which says nothing about how
+    many tricks each side has already won) stays correct. The memo stores BOUNDS, not
+    values: a result found with an alpha-beta cutoff anywhere below it is only a bound.
+    (An earlier version cached such results as exact values, and used absolute trick
+    counts with a key that ignores the tricks already won; both gave wrong answers on
+    some positions. Found by tests/test_ddsolver.py, which checks this solver against
+    a brute-force search and against ddsolver/.)
+    """
+    # Out of cards = nothing left to win. Checked on the hands, not on
+    # ps.is_complete() (13 completed tricks): positions built by trimming
+    # hands (tests, the Analyzer's what-ifs) end before trick 13, and
+    # without this check the search hit an empty move list and returned
+    # an infinite value (OverflowError in int()).
+    if ps.is_complete() or not ps.hands[ps.next_to_play]:
+        return 0
 
     nodes[0] += 1
     if nodes[0] > budget:
@@ -81,41 +103,46 @@ def _value(ps: PlayState, alpha: float, beta: float, memo: Dict[tuple, int], nod
         )
 
     key = _state_key(ps)
-    cached = memo.get(key)
-    if cached is not None:
-        return cached
+    lo, hi = memo.get(key, (float("-inf"), float("inf")))
+    if lo >= beta:
+        return int(lo)
+    if hi <= alpha:
+        return int(hi)
+    if lo == hi:
+        return int(lo)
+    a, b = max(alpha, lo), min(beta, hi)
 
     seat = ps.next_to_play
-    side = _side(seat)
     legal = ps.legal_cards_for(seat)
-    maximizing = side == "NS"
+    maximizing = _side(seat) == "NS"
     value = float("-inf") if maximizing else float("inf")
-    cutoff = False
 
     for card in legal:
         snapshot = ps.clone_state()
+        before = len(ps.completed_tricks)
         ps.play_card(seat, card)
-        child_value = _value(ps, alpha, beta, memo, nodes, budget)
+        gained = _ns_gain(ps, before)
+        child_value = gained + _value(ps, a - gained, b - gained, memo, nodes, budget)
         ps.restore_state(snapshot)
 
         if maximizing:
-            if child_value > value:
-                value = child_value
-            alpha = max(alpha, value)
+            value = max(value, child_value)
+            a = max(a, value)
         else:
-            if child_value < value:
-                value = child_value
-            beta = min(beta, value)
-
-        if alpha >= beta:
-            cutoff = True
+            value = min(value, child_value)
+            b = min(b, value)
+        if a >= b:
             break
 
-    # Only cache exact values (searches that explored the full window),
-    # never a value obtained via an alpha-beta cutoff — caching a mere
-    # bound as if it were exact is a classic transposition-table bug.
-    if not cutoff:
-        memo[key] = value
+    # what the search proved, given the window it ran with
+    a0, b0 = max(alpha, lo), min(beta, hi)
+    if value <= a0:
+        hi = min(hi, value)      # failed low: the true value is at most this
+    elif value >= b0:
+        lo = max(lo, value)      # failed high: the true value is at least this
+    else:
+        lo = hi = value          # inside the window: exact
+    memo[key] = (lo, hi)
     return int(value)
 
 
@@ -161,8 +188,7 @@ def solve_endgame(play_state: PlayState, node_budget: int = 200_000, max_cards_p
     ps.next_to_play = play_state.next_to_play
     ps.opening_lead_made = play_state.opening_lead_made
 
-    baseline_ns = ps.tricks_by_side()["NS"]
-    memo: Dict[tuple, int] = {}
+    memo: Dict[tuple, Tuple[float, float]] = {}
     nodes = [0]
 
     seat = ps.next_to_play
@@ -175,8 +201,10 @@ def solve_endgame(play_state: PlayState, node_budget: int = 200_000, max_cards_p
 
     for card in legal:
         snapshot = ps.clone_state()
+        before = len(ps.completed_tricks)
         ps.play_card(seat, card)
-        value = _value(ps, alpha, beta, memo, nodes, node_budget)
+        gained = _ns_gain(ps, before)
+        value = gained + _value(ps, alpha - gained, beta - gained, memo, nodes, node_budget)
         ps.restore_state(snapshot)
 
         improves = value > best_value if maximizing else value < best_value
@@ -191,6 +219,6 @@ def solve_endgame(play_state: PlayState, node_budget: int = 200_000, max_cards_p
     assert best_card is not None
     return EndgameResult(
         best_card=best_card,
-        ns_tricks_from_here=int(best_value) - baseline_ns,
+        ns_tricks_from_here=int(best_value),
         nodes_explored=nodes[0],
     )

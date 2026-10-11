@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bridge Trainer</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#1b1f27">
+  <link rel="icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
 </head>
 <body>
   <header id="top-bar">
@@ -19,6 +23,7 @@
       <span id="boards-played"></span>
       <button id="new-game-btn">New game</button>
       <button id="saved-games-btn">Saved games</button>
+      <button id="install-app-btn" hidden>Install app</button>
     </div>
   </header>
 
@@ -26,11 +31,10 @@
     <div id="new-game-card">
       <h3>Start a new game</h3>
       <p class="modal-hint">Starts fresh from board 1. Your current game is autosaved first, so you can always come back to it under "Saved games".</p>
-      <label for="play-mode-select">Opponent</label>
+      <label for="play-mode-select">Difficulty</label>
       <select id="play-mode-select">
-        <option value="heuristic">Standard bot (fast, club-level heuristics)</option>
-        <option value="dds">Play against DDS (double-dummy / PIMC leads)</option>
-        <option value="rl">Play against RL (self-play-trained network)</option>
+        <option value="rl">Easy — RL Network</option>
+        <option value="dds">Hard — Double-Dummy Solver</option>
       </select>
       <div id="play-mode-hint" class="modal-hint"></div>
       <div id="new-game-actions">
@@ -124,5 +128,42 @@
   </main>
 
   <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script>
+    // PWA install prompt -- Chrome/Edge on Android fire beforeinstallprompt
+    // instead of showing their own install UI when a valid manifest +
+    // service worker are present; we capture it and drive our own button
+    // so the option isn't silently invisible on desktop/iOS (neither of
+    // which fires this event -- iOS has no install-prompt API at all, so
+    // there the button simply never appears, which is the honest behavior
+    // rather than a broken one).
+    let deferredInstallPrompt = null;
+    const installBtn = document.getElementById("install-app-btn");
+
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      installBtn.hidden = false;
+    });
+
+    installBtn.addEventListener("click", async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installBtn.hidden = true;
+    });
+
+    window.addEventListener("appinstalled", () => {
+      installBtn.hidden = true;
+    });
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("{{ url_for('static', filename='service-worker.js') }}")
+          .catch((err) => console.warn("Service worker registration failed:", err));
+      });
+    }
+  </script>
 </body>
 </html>

@@ -1,0 +1,80 @@
+    [declare heuristic] 50/300  avg tricks 6.38
+    [declare heuristic] 100/300  avg tricks 6.45
+    [declare heuristic] 150/300  avg tricks 6.41
+    [declare heuristic] 200/300  avg tricks 6.44
+    [declare heuristic] 250/300  avg tricks 6.37
+    [declare heuristic] 300/300  avg tricks 6.41
+  declare heuristic              tricks  6.41 (±0.11)  vs DD +0.45  opt  85.6%  thrown/board 3.81  (18s)
+    [declare random] 50/300  avg tricks 5.58
+    [declare random] 100/300  avg tricks 5.57
+    [declare random] 150/300  avg tricks 5.52
+    [declare random] 200/300  avg tricks 5.57
+    [declare random] 250/300  avg tricks 5.47
+    [declare random] 300/300  avg tricks 5.44
+  declare random                 tricks  5.44 (±0.11)  vs DD -0.52  opt  79.9%  thrown/board 5.47  (22s)
+    [declare v1 RL (sees all)] 50/300  avg tricks 5.92
+    [declare v1 RL (sees all)] 100/300  avg tricks 5.85
+    [declare v1 RL (sees all)] 150/300  avg tricks 5.85
+    [declare v1 RL (sees all)] 200/300  avg tricks 5.91
+    [declare v1 RL (sees all)] 250/300  avg tricks 5.84
+    [declare v1 RL (sees all)] 300/300  avg tricks 5.84
+  declare v1 RL (sees all)       tricks  5.84 (±0.11)  vs DD -0.12  opt  81.1%  thrown/board 5.08  (68s)
+    [declare v2 full (sees all)] 50/300  avg tricks 8.14
+    [declare v2 full (sees all)] 100/300  avg tricks 8.13
+    [declare v2 full (sees all)] 150/300  avg tricks 8.23
+    [declare v2 full (sees all)] 200/300  avg tricks 8.18
+    [declare v2 full (sees all)] 250/300  avg tricks 8.07
+    [declare v2 full (sees all)] 300/300  avg tricks 8.06
+  declare v2 full (sees all)     tricks  8.06 (±0.12)  vs DD +2.10  opt  96.1%  thrown/board 0.91  (270s)
+    [declare v2 visible (honest)] 50/300  avg tricks 7.80
+    [declare v2 visible (honest)] 100/300  avg tricks 7.70
+    [declare v2 visible (honest)] 150/300  avg tricks 7.63
+    [declare v2 visible (honest)] 200/300  avg tricks 7.69
+    [declare v2 visible (honest)] 250/300  avg tricks 7.60
+    [declare v2 visible (honest)] 300/300  avg tricks 7.58
+  declare v2 visible (honest)    tricks  7.58 (±0.12)  vs DD +1.62  opt  93.5%  thrown/board 1.65  (68s)
+    [defend heuristic] 50/300  avg tricks 6.38
+    [defend heuristic] 100/300  avg tricks 6.45
+    [defend heuristic] 150/300  avg tricks 6.41
+    [defend heuristic] 200/300  avg tricks 6.44
+    [defend heuristic] 250/300  avg tricks 6.37
+    [defend heuristic] 300/300  avg tricks 6.41
+  defend  heuristic              tricks  6.41 (±0.11)  vs DD +0.45  opt  83.8%  thrown/board 4.26  (38s)
+    [defend random] 50/300  avg tricks 6.94
+    [defend random] 100/300  avg tricks 7.13
+    [defend random] 150/300  avg tricks 7.27
+    [defend random] 200/300  avg tricks 7.33
+    [defend random] 250/300  avg tricks 7.20
+    [defend random] 300/300  avg tricks 7.23
+  defend  random                 tricks  7.23 (±0.11)  vs DD +1.27  opt  79.3%  thrown/board 5.50  (36s)
+    [defend v1 RL (sees all)] 50/300  avg tricks 6.44
+    [defend v1 RL (sees all)] 100/300  avg tricks 6.74
+    [defend v1 RL (sees all)] 150/300  avg tricks 6.78
+    [defend v1 RL (sees all)] 200/300  avg tricks 6.91
+    [defend v1 RL (sees all)] 250/300  avg tricks 6.91
+    [defend v1 RL (sees all)] 300/300  avg tricks 6.90
+  defend  v1 RL (sees all)       tricks  6.90 (±0.11)  vs DD +0.94  opt  80.2%  thrown/board 5.11  (81s)
+    [defend v2 full (sees all)] 50/300  avg tricks 4.32
+    [defend v2 full (sees all)] 100/300  avg tricks 4.21
+    [defend v2 full (sees all)] 150/300  avg tricks 4.24
+    [defend v2 full (sees all)] 200/300  avg tricks 4.33
+    [defend v2 full (sees all)] 250/300  avg tricks 4.30
+    [defend v2 full (sees all)] 300/300  avg tricks 4.32
+  defend  v2 full (sees all)     tricks  4.32 (±0.13)  vs DD -1.64  opt  95.4%  thrown/board 1.09  (63s)
+    [defend v2 visible (honest)] 50/300  avg tricks 5.20
+    [defend v2 visible (honest)] 100/300  avg tricks 5.30
+    [defend v2 visible (honest)] 150/300  avg tricks 5.17
+    [defend v2 visible (honest)] 200/300  avg tricks 5.10
+    [defend v2 visible (honest)] 250/300  avg tricks 5.07
+    [defend v2 visible (honest)] 300/300  avg tricks 5.13
+  defend  v2 visible (honest)    tricks  5.13 (±0.12)  vs DD -0.83  opt  91.5%  thrown/board 2.22  (36s)
+
+Double-dummy tricks for these contracts: 5.96
+  declare: random - heuristic = -0.97 tricks/board (paired s.e. 0.10)
+  declare: v1 RL (sees all) - heuristic = -0.57 tricks/board (paired s.e. 0.09)
+  declare: v2 full (sees all) - heuristic = +1.65 tricks/board (paired s.e. 0.09)
+  declare: v2 visible (honest) - heuristic = +1.17 tricks/board (paired s.e. 0.10)
+  defend: random - heuristic = +0.82 tricks/board (paired s.e. 0.10)
+  defend: v1 RL (sees all) - heuristic = +0.49 tricks/board (paired s.e. 0.10)
+  defend: v2 full (sees all) - heuristic = -2.09 tricks/board (paired s.e. 0.11)
+  defend: v2 visible (honest) - heuristic = -1.28 tricks/board (paired s.e. 0.10)

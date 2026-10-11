@@ -64,3 +64,27 @@ def test_falls_back_cleanly_without_endplay():
     ps = _fresh_play_state(seed=7)
     card = choose_card(ps.next_to_play, ps, seed=7)
     assert card in ps.legal_cards_for(ps.next_to_play)
+
+
+def test_pimc_samples_never_contain_already_played_cards():
+    """Regression: the sampler used to put cards from earlier tricks (and the
+    current trick) back into the pool, so PIMC solved impossible deals."""
+    from cardplay.bot_player import choose_card as heuristic
+    from cardplay.dds_player import _known_hands_for, _sample_unseen_hands, played_cards
+
+    for seed in range(5):
+        ps = _fresh_play_state(seed)
+        for _ in range(18):  # four full tricks plus two cards of the fifth
+            ps.play_card(ps.next_to_play, heuristic(ps.next_to_play, ps, seed=seed))
+        seat = ps.next_to_play
+        known = _known_hands_for(seat, ps)
+        unseen = [s for s in SEATS if s not in known]
+        played = played_cards(ps)
+        assert len(played) == 18
+        sampled = _sample_unseen_hands(known, {s: len(ps.hands[s]) for s in unseen}, random.Random(seed), played)
+        for s in unseen:
+            assert len(sampled[s]) == len(ps.hands[s])
+            assert not (set(sampled[s]) & played)
+        # the sampled world uses exactly the cards still unplayed
+        world = [c for s in SEATS for c in (sampled[s] if s in unseen else ps.hands[s])]
+        assert len(world) == len(set(world)) == 52 - 18

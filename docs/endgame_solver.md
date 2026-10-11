@@ -53,13 +53,26 @@ number this module actually delivers on.
 
 ## Correctness details worth understanding
 
-- **Only exact values are cached.** When alpha-beta prunes a branch, the
-  value it returns is a *bound* (e.g. "at least this good"), not the
-  exact minimax value. Caching a bound as if it were exact is a classic
-  transposition-table bug — it can make later lookups return a wrong
-  answer for a *different* alpha/beta window. This module only writes to
-  its memo table when the search over a node's full window completed
-  without a cutoff.
+- **The memo stores bounds, not just values.** When alpha-beta prunes a
+  branch, the value it returns is only a *bound* ("at least this good",
+  or "at most this good"), and a bound found anywhere below a node makes
+  that node's own result a bound too. An earlier version only skipped
+  caching at the node where the cutoff itself happened, so results that
+  were really bounds got cached as exact values. It also stored absolute
+  trick counts (tricks already won included) under a key that doesn't
+  record how many tricks each side has won, so two routes to the same
+  remaining cards could share one wrong entry. On random endgames it gave
+  the wrong trick count in 12 of 150 random positions with 4 cards per
+  hand and 12 of 60 with 5 cards per hand, and its suggested card lost a
+  trick in 8 of 150 and 11 of 60 of them. Both are fixed: values are now "N-S tricks from
+  here on", and each memo entry keeps a lower and an upper bound, set
+  according to whether the search failed low, failed high or landed
+  inside its window. This was found by `tests/test_ddsolver.py`, which
+  checks this solver against a brute-force search and against the
+  from-scratch full-deal solver in `ddsolver/` (see `docs/dds_from_scratch.md`).
+  The cross-check against DDS in `tests/test_endgame_solver.py` had its own
+  bug: it used DDS's full-table call, which only accepts complete 13-card
+  deals, and read the wrong seat's entry. It now uses DDS's `solve_board`.
 - **The solver never mutates the caller's real position.** `solve_endgame`
   clones the incoming `PlayState` up front; search-time backtracking
   reuses the existing, well-tested `PlayState.clone_state()` /

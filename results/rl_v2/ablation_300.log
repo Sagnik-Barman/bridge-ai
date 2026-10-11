@@ -1,0 +1,48 @@
+    [declare heuristic] 50/300  avg tricks 6.38
+    [declare heuristic] 100/300  avg tricks 6.45
+    [declare heuristic] 150/300  avg tricks 6.41
+    [declare heuristic] 200/300  avg tricks 6.44
+    [declare heuristic] 250/300  avg tricks 6.37
+    [declare heuristic] 300/300  avg tricks 6.41
+  declare heuristic              tricks  6.41 (±0.11)  vs DD +0.45  opt  85.6%  thrown/board 3.81  (17s)
+    [declare v2 visible, round 0 (0.49M positions)] 50/300  avg tricks 7.54
+    [declare v2 visible, round 0 (0.49M positions)] 100/300  avg tricks 7.38
+    [declare v2 visible, round 0 (0.49M positions)] 150/300  avg tricks 7.37
+    [declare v2 visible, round 0 (0.49M positions)] 200/300  avg tricks 7.42
+    [declare v2 visible, round 0 (0.49M positions)] 250/300  avg tricks 7.31
+    [declare v2 visible, round 0 (0.49M positions)] 300/300  avg tricks 7.30
+  declare v2 visible, round 0 (0.49M positions) tricks  7.30 (±0.12)  vs DD +1.34  opt  91.5%  thrown/board 2.11  (98s)
+    [declare v2 visible, round 0+0b (1.7M)] 50/300  avg tricks 7.88
+    [declare v2 visible, round 0+0b (1.7M)] 100/300  avg tricks 7.59
+    [declare v2 visible, round 0+0b (1.7M)] 150/300  avg tricks 7.70
+    [declare v2 visible, round 0+0b (1.7M)] 200/300  avg tricks 7.72
+    [declare v2 visible, round 0+0b (1.7M)] 250/300  avg tricks 7.60
+    [declare v2 visible, round 0+0b (1.7M)] 300/300  avg tricks 7.57
+  declare v2 visible, round 0+0b (1.7M) tricks  7.57 (±0.12)  vs DD +1.61  opt  93.2%  thrown/board 1.67  (264s)
+    [defend heuristic] 50/300  avg tricks 6.38
+    [defend heuristic] 100/300  avg tricks 6.45
+    [defend heuristic] 150/300  avg tricks 6.41
+    [defend heuristic] 200/300  avg tricks 6.44
+    [defend heuristic] 250/300  avg tricks 6.37
+    [defend heuristic] 300/300  avg tricks 6.41
+  defend  heuristic              tricks  6.41 (±0.11)  vs DD +0.45  opt  83.8%  thrown/board 4.26  (40s)
+    [defend v2 visible, round 0 (0.49M positions)] 50/300  avg tricks 5.46
+    [defend v2 visible, round 0 (0.49M positions)] 100/300  avg tricks 5.38
+    [defend v2 visible, round 0 (0.49M positions)] 150/300  avg tricks 5.39
+    [defend v2 visible, round 0 (0.49M positions)] 200/300  avg tricks 5.46
+    [defend v2 visible, round 0 (0.49M positions)] 250/300  avg tricks 5.42
+    [defend v2 visible, round 0 (0.49M positions)] 300/300  avg tricks 5.46
+  defend  v2 visible, round 0 (0.49M positions) tricks  5.46 (±0.12)  vs DD -0.50  opt  89.2%  thrown/board 2.82  (78s)
+    [defend v2 visible, round 0+0b (1.7M)] 50/300  avg tricks 5.24
+    [defend v2 visible, round 0+0b (1.7M)] 100/300  avg tricks 5.16
+    [defend v2 visible, round 0+0b (1.7M)] 150/300  avg tricks 5.19
+    [defend v2 visible, round 0+0b (1.7M)] 200/300  avg tricks 5.21
+    [defend v2 visible, round 0+0b (1.7M)] 250/300  avg tricks 5.16
+    [defend v2 visible, round 0+0b (1.7M)] 300/300  avg tricks 5.18
+  defend  v2 visible, round 0+0b (1.7M) tricks  5.18 (±0.12)  vs DD -0.78  opt  91.1%  thrown/board 2.35  (133s)
+
+Double-dummy tricks for these contracts: 5.96
+  declare: v2 visible, round 0 (0.49M positions) - heuristic = +0.89 tricks/board (paired s.e. 0.09)
+  declare: v2 visible, round 0+0b (1.7M) - heuristic = +1.16 tricks/board (paired s.e. 0.10)
+  defend: v2 visible, round 0 (0.49M positions) - heuristic = -0.95 tricks/board (paired s.e. 0.10)
+  defend: v2 visible, round 0+0b (1.7M) - heuristic = -1.23 tricks/board (paired s.e. 0.11)

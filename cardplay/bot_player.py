@@ -90,7 +90,11 @@ def _lowest_discard(hand: List[Card], legal: List[Card]) -> Card:
     suit, lowest card, to preserve length elsewhere — a simple standard
     discarding heuristic."""
     lengths = _suit_lengths(hand)
-    legal_suits = {c.suit for c in legal}
+    # Sorted, not a bare set: ties (two equally short suits) used to be broken
+    # by set iteration order, which follows Python's per-process string hash
+    # seed -- so the same deal could be played differently in two runs (measured:
+    # 6.30 / 6.25 / 6.40 avg tricks on the same 60 deals under three hash seeds).
+    legal_suits = sorted({c.suit for c in legal}, key=lambda s: s.value)
     shortest_suit = min(legal_suits, key=lambda s: lengths[s])
     candidates = [c for c in legal if c.suit == shortest_suit]
     return min(candidates, key=_rank_value)

@@ -52,3 +52,23 @@ def test_choose_card_for_declarer_sampling_only_the_two_defenders():
 def test_rl_checkpoint_status_mentions_missing_when_absent():
     msg = rl_checkpoint_status("/nonexistent/path/checkpoint.npz")
     assert "No trained checkpoint" in msg
+
+
+def test_v2_checkpoints_load_and_play_legal_cards():
+    import os, tempfile
+    from rl.network_v2 import CardPlayNet
+    from rl.rl_player import load_any
+    for obs in ("visible", "full"):
+        path = os.path.join(tempfile.mkdtemp(), "v2.pt")
+        CardPlayNet(obs=obs, width=32, blocks=1).save(path)
+        net = load_any(path)
+        assert getattr(net, "obs") == obs
+        ps = _fresh_play_state(seed=5)
+        guard = 0
+        while not ps.is_complete():
+            guard += 1
+            assert guard < 60
+            seat = ps.next_to_play
+            card = choose_card(seat, ps, net, seed=guard, num_samples=2)
+            assert card in ps.legal_cards_for(seat)
+            ps.play_card(seat, card)

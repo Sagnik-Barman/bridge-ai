@@ -1,0 +1,17 @@
+25 positions checked, all matching so far
+50 positions checked, all matching so far
+75 positions checked, all matching so far
+100 positions checked, all matching so far
+125 positions checked, all matching so far
+150 positions checked, all matching so far
+175 positions checked, all matching so far
+200 positions checked, all matching so far
+225 positions checked, all matching so far
+250 positions checked, all matching so far
+275 positions checked, all matching so far
+300 positions checked, all matching so far
+
+300/300 positions identical to DDS (1369 legal cards scored)
+ours (score every legal card): median 0.001 s, mean 0.044 s, 90th pct 0.085 s, max 1.640 s
+DDS  (score every legal card): median 0.000 s, mean 0.004 s, 90th pct 0.009 s, max 0.144 s
+wrote /tmp/res/dds_scratch_positions.csv

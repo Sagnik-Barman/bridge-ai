@@ -271,9 +271,9 @@ function renderBoardResult(state) {
 }
 
 const PLAY_MODE_LABELS = {
-  heuristic: "vs. Standard bot",
-  dds: "vs. DDS",
-  rl: "vs. RL",
+  heuristic: "vs. Standard bot",  // kept for saved games created before Easy/Hard existed
+  dds: "Hard (vs. DDS)",
+  rl: "Easy (vs. RL)",
 };
 
 function renderTopBar(state) {
@@ -440,9 +440,8 @@ async function deleteSavedGame(name) {
 // -- new game (with opponent/play-mode picker) ------------------------
 
 const PLAY_MODE_HINTS = {
-  heuristic: "Club-level heuristics — fast, no extra setup needed.",
-  dds: "Uses real double-dummy analysis for leads when `endplay` is installed; otherwise falls back to the standard bot automatically.",
-  rl: "Uses a self-play-trained network when a checkpoint exists (see docs/rl_training.md); otherwise falls back to the standard bot automatically.",
+  dds: "Real double-dummy analysis for leads — near-optimal defense. The toughest opponent here. Falls back to the standard bot automatically if unavailable.",
+  rl: "A self-play-trained network — currently weaker than the rule-based bot, which makes it the friendlier opponent to start on. Falls back to the standard bot automatically if no checkpoint is loaded.",
 };
 
 function openNewGameModal() {

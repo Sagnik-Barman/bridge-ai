@@ -1,0 +1,8 @@
+2154354 train / 43999 held-out positions, obs=full, features=380
+epoch  1  train opt 0.929  |  held-out: opt 0.958  regret 0.047  q-opt 0.948  q-regret 0.059  value-mse 0.63  (290s)
+epoch  2  train opt 0.961  |  held-out: opt 0.966  regret 0.038  q-opt 0.956  q-regret 0.048  value-mse 0.53  (106s)
+epoch  3  train opt 0.968  |  held-out: opt 0.969  regret 0.034  q-opt 0.960  q-regret 0.044  value-mse 0.49  (105s)
+epoch  4  train opt 0.974  |  held-out: opt 0.971  regret 0.032  q-opt 0.966  q-regret 0.038  value-mse 0.45  (107s)
+epoch  5  train opt 0.979  |  held-out: opt 0.973  regret 0.030  q-opt 0.967  q-regret 0.036  value-mse 0.44  (109s)
+epoch  6  train opt 0.983  |  held-out: opt 0.973  regret 0.029  q-opt 0.967  q-regret 0.036  value-mse 0.43  (106s)
+saved rl/checkpoints/v2_full.pt
