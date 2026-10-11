@@ -144,6 +144,8 @@ def generate(games: int, out_dir: str, workers: int = 2, seed: int = 0,
     if "net" in mix and not net_path:
         raise ValueError("behaviour 'net' needs --net")
     os.makedirs(out_dir, exist_ok=True)
+    from rl.oracle import backend_report
+    print(backend_report(backend), flush=True)
     per = [games // workers + (1 if i < games % workers else 0) for i in range(workers)]
     jobs = [(i, per[i], seed * 1000 + i, mix, net_path, os.path.join(out_dir, f"part{i}.npz"), backend)
             for i in range(workers)]

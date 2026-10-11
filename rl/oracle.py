@@ -39,12 +39,30 @@ def _hand_pbn(cards) -> str:
     return ".".join("".join(sorted(by[s], key=_RANK_ORDER.index)) for s in _SUIT_ORDER)
 
 
+_ENDPLAY_ERROR = None
+
+
 def endplay_available() -> bool:
+    global _ENDPLAY_ERROR
     try:
         from endplay.dds import solve_board  # noqa: F401
         return True
-    except Exception:
+    except Exception as exc:
+        _ENDPLAY_ERROR = f"{type(exc).__name__}: {exc}"
         return False
+
+
+def backend_report(backend: str = "auto") -> str:
+    """One line saying which solver `backend` resolves to, and why. rl/datagen.py
+    prints this at start-up: "auto" used to fall back to the ~40x slower scratch
+    solver silently when endplay failed to import, which made a labelling run on
+    Windows take hours instead of minutes with nothing on screen saying why."""
+    if backend == "dds" or (backend == "auto" and endplay_available()):
+        return "oracle: DDS via endplay (fast)"
+    if backend == "scratch":
+        return "oracle: ddsolver/ scratch solver (about 40x slower than DDS), as requested"
+    return ("oracle: WARNING, endplay could not be imported, so falling back to the ddsolver/ scratch "
+            f"solver (same answers, about 40x slower). Import error: {_ENDPLAY_ERROR}")
 
 
 _DDS_READY = False
