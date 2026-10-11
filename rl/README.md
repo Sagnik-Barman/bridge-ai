@@ -1,8 +1,9 @@
 # RL card-play agent
 
 **Current agent: v2** (October 2026). It learns from an exact double-dummy oracle and
-plays only on what it can see. It beats the heuristic bot by +1.17 tricks/board as
-declarer and -1.28 as defender (300 deals). Files: `oracle.py`, `features_v2.py`,
+plays only on what it can see. Trained on 3.4M positions, it beats the heuristic bot by
++1.34 tricks/board as declarer and -1.40 as defender (300 deals; +1.42 / -1.25 on a
+second, unseen set). Files: `oracle.py`, `features_v2.py`,
 `network_v2.py`, `datagen.py`, `train_v2.py`, `agent_v2.py`, `evaluate_v2.py`. See the
 "v2" section of `docs/rl_training.md`. Everything listed below is the original v1
 (REINFORCE self-play), kept as the documented baseline.

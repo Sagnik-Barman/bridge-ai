@@ -13,10 +13,12 @@ this project draws on.
 > **Status (October 2026): the agent now beats the heuristic bot.** Attempts 1-5 below
 > (REINFORCE self-play, in various forms) never did, and are kept as the documented baseline.
 > The current agent ("v2") learns from an exact double-dummy oracle instead of end-of-hand
-> trick counts. Seeing only what a real player sees, it takes **+1.17 tricks/board more than
-> the heuristic bot as declarer and gives up 1.28 fewer as defender** (300 deals, paired
-> s.e. 0.10), and it beats the app's DDS/PIMC "Hard" opponent by +0.87 / -0.70. Jump to
-> **"v2 (October 2026)"** near the end; everything before it describes v1.
+> trick counts. Seeing only what a real player sees, the deployed model (3.4M training
+> positions) takes **+1.34 tricks/board more than the heuristic bot as declarer and gives up
+> 1.40 fewer as defender** (300 deals, paired s.e. 0.10). On a second, unseen set of 300
+> deals it scored +1.42 / -1.25. The first v2 model (2.2M positions) also beat the app's
+> DDS/PIMC "Hard" opponent, by +0.87 / -0.70. Jump to **"v2 (October 2026)"** near the
+> end; everything before it describes v1.
 
 ## The problem being solved (and the one *not* being solved)
 
@@ -782,6 +784,47 @@ Held-out accuracy on 44,000 positions from games never trained on: 94.2% of the 
 model's top choices are double-dummy optimal (average 0.069 tricks lost per decision). For
 the full-information model it's 97.3% (0.029 tricks).
 
+### v2.1: more data, retrained and reproduced on a second machine
+
+The ablation above showed more distinct deals was what mattered, so the pipeline was rerun on
+Sagnik's Windows laptop (RTX 4050) with one more batch of 30,000 random deals (`round0c`).
+That gave **84,000 games and 3.4M labelled positions**. The model was trained from scratch
+with the same settings: 8 epochs, dropout 0.1, about 23 s per epoch on the GPU.
+
+Two runs on that machine:
+
+1. **Reproduction.** Same data sizes and seeds as the 2.2M model, regenerated from scratch.
+   It landed on the same result: held-out 94.2% optimal (0.068 tricks lost per decision), and
+   +1.23 / -1.23 against the heuristic on the 300 benchmark deals, against the original's
+   +1.17 / -1.28. That's within noise; the pipeline reproduces.
+2. **Scaling, 2.2M -> 3.4M positions.** Held-out accuracy went from 94.2% to 94.9%, and
+   tricks lost per decision from 0.068 to 0.059. The model was then checked on two separate
+   sets of 300 deals. Seed 2 was a fresh set, used because the model was chosen after
+   seeing seed 1:
+
+| 300 deals, vs heuristic (paired s.e. ~0.10) | seed 1: declarer | seed 1: defence | seed 2: declarer | seed 2: defence |
+|---|---:|---:|---:|---:|
+| v2, 2.2M positions (previous `latest.pt`) | +1.17 | -1.28 | +1.34 | -1.10 |
+| **v2, 3.4M positions (now `latest.pt`)** | **+1.34** | **-1.40** | **+1.42** | **-1.25** |
+
+The larger model is ahead on all four lines, by 0.08 to 0.17 tricks/board. Each difference
+alone is small next to the noise, but they all point the same way, and so do the held-out
+metrics. On seed 1, the tricks thrown away per board fell from 1.65 to 1.42 as declarer and
+from 2.22 to 1.93 as defender. So it is now the deployed model. The gain per extra position
+is shrinking: 0.49M -> 1.7M positions gained about +0.27 as declarer, 1.7M -> 3.4M about
++0.17. More data still helps, but each round helps less.
+
+The "Results" and "Against the DDS/PIMC Hard opponent" tables above were measured with the
+2.2M model and are kept as recorded. Raw output: `results/rl_v2/v2_big_pipeline_and_seed1.log`
+and `results/rl_v2/v2_big_seed2.log`.
+
+**A setup lesson from this run, for anyone reproducing it:** activate the project's `.venv`.
+The first attempt ran on a system Python with no endplay installed. `rl/oracle.py`'s
+`backend="auto"` then quietly fell back to the from-scratch solver (identical labels, about 40x
+slower), so generating data took hours instead of minutes. `rl/datagen.py` now prints which
+solver it is using, and the import error if DDS isn't available.
+`scripts/datagen_speed_check.py` times each step if a run looks slow.
+
 ### Bugs found while doing this
 
 - **PIMC was sampling impossible deals** (`cardplay/dds_player.py`, used by both the Hard
@@ -847,7 +890,16 @@ python -m rl.datagen --games 12000 --seed 3 --mix net=0.6,heur=0.25,dd=0.15 \
     --net rl/checkpoints/v2_visible_r0b.pt --out data/v2/round1
 python -m rl.train_v2 --data data/v2/round0 data/v2/round0b data/v2/round1 --obs visible --epochs 8 \
     --dropout 0.1 --init rl/checkpoints/v2_visible_r0b.pt --lr 1e-3 --out rl/checkpoints/latest.pt
+# v2.1 (the deployed model): one more batch of deals, then train from scratch on everything
+python -m rl.datagen --games 30000 --seed 4 --out data/v2/round0c
+python -m rl.train_v2 --data data/v2/round0 data/v2/round0b data/v2/round0c data/v2/round1 --obs visible \
+    --epochs 8 --dropout 0.1 --device cuda --out rl/checkpoints/latest.pt
 ```
+
+Run all of this inside the project's `.venv` (endplay must import; `rl/datagen.py` prints
+`oracle: DDS via endplay (fast)` when it does). With DDS working, a 20-thread laptop with an
+RTX 4050 generated 30,000 games in about 5.5 minutes with 12 workers, and trained on 3.4M
+positions in about 3 minutes.
 
 ## Wiring into the app
 

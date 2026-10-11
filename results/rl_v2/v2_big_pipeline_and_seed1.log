@@ -1,0 +1,90 @@
+(.venv) PS D:\Projects\bridge-ai> python -m rl.datagen --games 30000 --workers 12 --seed 4 --out data/v2/round0c
+>> python -m rl.train_v2 --data data/v2/round0 data/v2/round0b data/v2/round0c data/v2/round1 --obs visible --epochs 8 --dropout 0.1 --device cuda --out rl/checkpoints/v2_big.pt
+>> python -m rl.evaluate_v2 --extra "current=rl/checkpoints/latest.pt" --v2 rl/checkpoints/v2_big.pt --num-deals 300 --seed 1 --defence
+oracle: DDS via endplay (fast)
+  worker 0: 100/2500 games, 4072 positions, 16s elapsed, ~384s left
+  worker 0: 200/2500 games, 8112 positions, 30s elapsed, ~349s left
+  worker 0: 300/2500 games, 12174 positions, 47s elapsed, ~345sleft
+  worker 0: 400/2500 games, 16223 positions, 57s elapsed, ~299sleft
+  worker 0: 500/2500 games, 20310 positions, 69s elapsed, ~276sleft
+  worker 0: 600/2500 games, 24394 positions, 85s elapsed, ~269sleft
+  worker 0: 700/2500 games, 28432 positions, 99s elapsed, ~255sleft
+  worker 0: 800/2500 games, 32487 positions, 114s elapsed, ~243s left
+  worker 0: 900/2500 games, 36560 positions, 129s elapsed, ~230s left
+  worker 0: 1000/2500 games, 40632 positions, 144s elapsed, ~216s left
+  worker 0: 1100/2500 games, 44702 positions, 160s elapsed, ~204s left
+  worker 0: 1200/2500 games, 48781 positions, 178s elapsed, ~193s left
+  worker 0: 1300/2500 games, 52834 positions, 189s elapsed, ~175s left
+  worker 0: 1400/2500 games, 56902 positions, 207s elapsed, ~162s left
+  worker 0: 1500/2500 games, 60953 positions, 222s elapsed, ~148s left
+  worker 0: 1600/2500 games, 65001 positions, 235s elapsed, ~132s left
+  worker 0: 1700/2500 games, 69054 positions, 248s elapsed, ~117s left
+  worker 0: 1800/2500 games, 73096 positions, 263s elapsed, ~102s left
+  worker 0: 1900/2500 games, 77131 positions, 272s elapsed, ~86s left
+  worker 0: 2000/2500 games, 81202 positions, 281s elapsed, ~70s left
+  worker 0: 2100/2500 games, 85280 positions, 290s elapsed, ~55s left
+  worker 0: 2200/2500 games, 89359 positions, 300s elapsed, ~41s left
+  worker 0: 2300/2500 games, 93436 positions, 308s elapsed, ~27s left
+  worker 0: 2400/2500 games, 97509 positions, 319s elapsed, ~13s left
+  worker 0: 2500/2500 games, 101571 positions, 328s elapsed, ~0s left
+wrote 1218928 positions to data/v2/round0c
+3348703 train / 68355 held-out positions, obs=visible, features=659
+training on cuda (NVIDIA GeForce RTX 4050 Laptop GPU)
+epoch  1  train opt 0.913  |  held-out: opt 0.936  regret 0.074 q-opt 0.925  q-regret 0.087  value-mse 1.42  (23s)
+epoch  2  train opt 0.941  |  held-out: opt 0.943  regret 0.066 q-opt 0.934  q-regret 0.076  value-mse 1.35  (23s)
+epoch  3  train opt 0.947  |  held-out: opt 0.946  regret 0.062 q-opt 0.939  q-regret 0.071  value-mse 1.31  (24s)
+epoch  4  train opt 0.952  |  held-out: opt 0.948  regret 0.060 q-opt 0.941  q-regret 0.068  value-mse 1.28  (22s)
+epoch  5  train opt 0.957  |  held-out: opt 0.949  regret 0.059 q-opt 0.943  q-regret 0.065  value-mse 1.28  (23s)
+epoch  6  train opt 0.961  |  held-out: opt 0.948  regret 0.060 q-opt 0.944  q-regret 0.064  value-mse 1.28  (23s)
+epoch  7  train opt 0.965  |  held-out: opt 0.949  regret 0.059 q-opt 0.944  q-regret 0.064  value-mse 1.28  (22s)
+epoch  8  train opt 0.968  |  held-out: opt 0.949  regret 0.059 q-opt 0.945  q-regret 0.064  value-mse 1.28  (22s)
+saved rl/checkpoints/v2_big.pt
+    [declare heuristic] 50/300  avg tricks 6.38
+    [declare heuristic] 100/300  avg tricks 6.45
+    [declare heuristic] 150/300  avg tricks 6.41
+    [declare heuristic] 200/300  avg tricks 6.44
+    [declare heuristic] 250/300  avg tricks 6.37
+    [declare heuristic] 300/300  avg tricks 6.41
+  declare heuristic              tricks  6.41 (±0.11)  vs DD +0.45  opt  85.6%  thrown/board 3.81  (9s)
+    [declare current] 50/300  avg tricks 7.80
+    [declare current] 100/300  avg tricks 7.70
+    [declare current] 150/300  avg tricks 7.63
+    [declare current] 200/300  avg tricks 7.69
+    [declare current] 250/300  avg tricks 7.60
+    [declare current] 300/300  avg tricks 7.58
+  declare current                tricks  7.58 (±0.12)  vs DD +1.62  opt  93.5%  thrown/board 1.65  (11s)
+    [declare v2 visible (honest)] 50/300  avg tricks 7.84
+    [declare v2 visible (honest)] 100/300  avg tricks 7.66
+    [declare v2 visible (honest)] 150/300  avg tricks 7.77
+    [declare v2 visible (honest)] 200/300  avg tricks 7.83
+    [declare v2 visible (honest)] 250/300  avg tricks 7.72
+    [declare v2 visible (honest)] 300/300  avg tricks 7.75
+  declare v2 visible (honest)    tricks  7.75 (±0.12)  vs DD +1.79  opt  94.2%  thrown/board 1.42  (11s)
+    [defend heuristic] 50/300  avg tricks 6.38
+    [defend heuristic] 100/300  avg tricks 6.45
+    [defend heuristic] 150/300  avg tricks 6.41
+    [defend heuristic] 200/300  avg tricks 6.44
+    [defend heuristic] 250/300  avg tricks 6.37
+    [defend heuristic] 300/300  avg tricks 6.41
+  defend  heuristic              tricks  6.41 (±0.11)  vs DD +0.45  opt  83.8%  thrown/board 4.26  (15s)
+    [defend current] 50/300  avg tricks 5.20
+    [defend current] 100/300  avg tricks 5.30
+    [defend current] 150/300  avg tricks 5.17
+    [defend current] 200/300  avg tricks 5.10
+    [defend current] 250/300  avg tricks 5.07
+    [defend current] 300/300  avg tricks 5.13
+  defend  current                tricks  5.13 (±0.12)  vs DD -0.83  opt  91.5%  thrown/board 2.22  (17s)
+    [defend v2 visible (honest)] 50/300  avg tricks 4.70
+    [defend v2 visible (honest)] 100/300  avg tricks 4.76
+    [defend v2 visible (honest)] 150/300  avg tricks 4.89
+    [defend v2 visible (honest)] 200/300  avg tricks 4.98
+    [defend v2 visible (honest)] 250/300  avg tricks 4.92
+    [defend v2 visible (honest)] 300/300  avg tricks 5.01
+  defend  v2 visible (honest)    tricks  5.01 (±0.13)  vs DD -0.95  opt  92.4%  thrown/board 1.93  (17s)
+
+Double-dummy tricks for these contracts: 5.96
+  declare: current - heuristic = +1.17 tricks/board (paired s.e. 0.10)
+  declare: v2 visible (honest) - heuristic = +1.34 tricks/board(paired s.e. 0.10)
+  defend: current - heuristic = -1.28 tricks/board (paired s.e.0.10)
+  defend: v2 visible (honest) - heuristic = -1.40 tricks/board (paired s.e. 0.11)
+(.venv) PS D:\Projects\bridge-ai> 
