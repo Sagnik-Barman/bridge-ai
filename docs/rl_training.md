@@ -16,8 +16,8 @@ this project draws on.
 > trick counts. Seeing only what a real player sees, the deployed model (3.4M training
 > positions) takes **+1.34 tricks/board more than the heuristic bot as declarer and gives up
 > 1.40 fewer as defender** (300 deals, paired s.e. 0.10). On a second, unseen set of 300
-> deals it scored +1.42 / -1.25. The first v2 model (2.2M positions) also beat the app's
-> DDS/PIMC "Hard" opponent, by +0.87 / -0.70. Jump to **"v2 (October 2026)"** near the
+> deals it scored +1.42 / -1.25. It also beats the app's DDS/PIMC "Hard" opponent by
+> **+1.03 / -0.83** tricks/board. Jump to **"v2 (October 2026)"** near the
 > end; everything before it describes v1.
 
 ## The problem being solved (and the one *not* being solved)
@@ -813,6 +813,12 @@ metrics. On seed 1, the tricks thrown away per board fell from 1.65 to 1.42 as d
 from 2.22 to 1.93 as defender. So it is now the deployed model. The gain per extra position
 is shrinking: 0.49M -> 1.7M positions gained about +0.27 as declarer, 1.7M -> 3.4M about
 +0.17. More data still helps, but each round helps less.
+
+Against the DDS/PIMC "Hard" opponent, on the same 300 deals (seed 1;
+`results/rl_v2/v2_big_vs_dds_seed1.log`): declarer 7.75 vs Hard's 6.72, **+1.03**; as
+defender, it holds the declarer to 5.01 vs Hard's 5.84, **-0.83**. The 2.2M model's margins
+were +0.87 / -0.70. It is also about 11x faster than Hard as declarer and 24x faster as
+defender over the 300 boards (11 s vs 123 s, 17 s vs 414 s).
 
 The "Results" and "Against the DDS/PIMC Hard opponent" tables above were measured with the
 2.2M model and are kept as recorded. Raw output: `results/rl_v2/v2_big_pipeline_and_seed1.log`
